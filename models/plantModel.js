@@ -1,9 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 const validator = require("validator");
-const PP = require("./../controllers/plantController");
-const User = require("../models/userModel");
-const userCont = require("../controllers/userControllers");
 
 //replace example with name of item you're making a schema for. Pay attention to Case here.
 //This was previously used to add Tours but can be altered.
@@ -19,7 +16,10 @@ const plantSchema = new mongoose.Schema(
         "A plant name must have less or equal then 30 characters",
       ],
       minlength: [1, "A plant name must have more or equal then 1 character"],
-      validate: [validator.isAlpha, "Plant name must only contain characters"],
+      // validate: [
+      //   validator.isAlphanumeric,
+      //   "Plant name must only contain characters",
+      // ]
     },
     slug: String,
     species: {
