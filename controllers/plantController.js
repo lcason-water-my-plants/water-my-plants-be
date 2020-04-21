@@ -1,106 +1,117 @@
-const Example = require("../models/exampleModel");
+const Plant = require("../models/plantModel");
 const APIFeatures = require("../utils/apiFeatures");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+// const User = require("../models/userModel");
+// const User = require("./userControllers");
+const User = require("./../models/userModel");
 
-exports.aliasTopExamples = (req, res, next) => {
+exports.aliasTopPlants = (req, res, next) => {
   req.query.limit = "5";
   req.query.sort = "-ratingsAverage,price";
   req.query.fields = "name,price,ratingsAverage,summary,difficulty";
   next();
 };
 
-exports.getAllExamples = catchAsync(async (req, res, next) => {
+exports.getAllPlants = catchAsync(async (req, res, next) => {
   // EXECUTE QUERY
-  const features = new APIFeatures(Example.find(), req.query)
+  const features = new APIFeatures(Plant.find(), req.query)
     .filter()
     .sort()
     .limitFields()
     .paginate();
-  const examples = await features.query;
+  const plants = await features.query;
 
   // SEND RESPONSE
   res.status(200).json({
     status: "success",
-    results: examples.length,
+    results: plants.length,
     data: {
-      examples,
+      plants,
     },
   });
 });
 
-exports.getExample = catchAsync(async (req, res, next) => {
+exports.getPlant = catchAsync(async (req, res, next) => {
   // const tour = await Tour.findById(req.params.id);
-  const features = new APIFeatures(Example.findById(req.params.id), req.query);
+  const features = new APIFeatures(Plant.findById(req.params.id), req.query);
   // Tour.findOne({ _id: req.params.id })
-  const example = await features.query;
+  const plant = await features.query;
 
-  if (!example) {
-    return next(
-      new AppError(`No example found with id: ${req.params.id} `, 404)
-    );
+  if (!plant) {
+    return next(new AppError(`No plant found with id: ${req.params.id} `, 404));
   }
   res.status(200).json({
     status: "success",
     data: {
-      example: example,
+      plant: plant,
     },
   });
 });
 
-exports.createExample = catchAsync(async (req, res, next) => {
-  const newExample = await Example.create(req.body);
+let newestPlantID;
+
+exports.createPlant = catchAsync(async (req, res, next) => {
+  const newPlant = await Plant.create(req.body);
+  newestPlantID = newPlant._id;
+  const update = await User.findByIdAndUpdate(
+    req.user._id,
+    { $push: { plants: newPlant._id } },
+    { new: true }
+  );
+  const updatePlant = await Plant.findByIdAndUpdate(
+    newPlant._id,
+    { $push: { owner: req.user._id } },
+    { new: true }
+  );
   res.status(201).json({
     status: "success",
     data: {
-      example: newExample,
+      newPlant,
+      update,
     },
   });
 });
 
-exports.updateExample = catchAsync(async (req, res, next) => {
-  const example = await Example.findByIdAndUpdate(req.params.id, req.body, {
+exports.updatePlant = catchAsync(async (req, res, next) => {
+  const plant = await Plant.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
-  if (!example) {
-    return next(
-      new AppError(`No example found with id: ${req.params.id} `, 404)
-    );
+  if (!plant) {
+    return next(new AppError(`No plant found with id: ${req.params.id} `, 404));
   }
 
   res.status(200).json({
     status: "success",
     data: {
-      example,
+      plant,
     },
   });
 });
 
-exports.deleteExample = catchAsync(async (req, res, next) => {
-  const example = await Example.findByIdAndDelete(req.params.id);
+exports.deletePlant = catchAsync(async (req, res, next) => {
+  const plant = await Plant.findByIdAndDelete(req.params.id);
 
-  if (!example) {
-    return next(
-      new AppError(`No example found with id: ${req.params.id} `, 404)
-    );
+  if (!plant) {
+    return next(new AppError(`No plant found with id: ${req.params.id} `, 404));
   }
   res.status(204).json({
     status: "success",
-    message: "This example has been deleted",
+    message: "This plant has been deleted",
     data: null,
   });
 });
 
-exports.getExampleStats = catchAsync(async (req, res, next) => {
-  const stats = await Example.aggregate([
+exports.getPlantStats = catchAsync(async (req, res, next) => {
+  const stats = await Plant.aggregate([
     {
       $match: { ratingsAverage: { $gte: 4.5 } },
     },
     {
       $group: {
         _id: { $toUpper: "$difficulty" },
-        numExamples: { $sum: 1 },
+        numPlants: { $sum: 1 },
         numRatings: { $sum: "$ratingsQuantity" },
         avgRating: { $avg: "$ratingsAverage" },
         avgPrice: { $avg: "$price" },
@@ -127,7 +138,7 @@ exports.getExampleStats = catchAsync(async (req, res, next) => {
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1; // 2021
 
-  const plan = await Example.aggregate([
+  const plan = await Plant.aggregate([
     {
       $unwind: "$startDates",
     },
@@ -142,8 +153,8 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     {
       $group: {
         _id: { $month: "$startDates" },
-        numExampleStarts: { $sum: 1 },
-        examples: { $push: "$name" },
+        numPlantStarts: { $sum: 1 },
+        plants: { $push: "$name" },
       },
     },
     {
@@ -155,7 +166,7 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
       },
     },
     {
-      $sort: { numExampleStarts: -1 },
+      $sort: { numPlantStarts: -1 },
     },
     {
       $limit: 12,

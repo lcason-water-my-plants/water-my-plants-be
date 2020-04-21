@@ -2,7 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 
 const AppError = require("./utils/appError");
-const exampleRouter = require("./routes/exampleRoutes");
+const plantRouter = require("./routes/plantRoutes");
 const userRouter = require("./routes/userRoutes");
 const globalErrorHandler = require("./controllers/errorController");
 
@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.use("/api/v1/examples", exampleRouter);
+app.use("/api/v1/plants", plantRouter);
 app.use("/api/v1/users", userRouter);
 
 app.all("*", (req, res, next) => {

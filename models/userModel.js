@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
+  plants: Array,
 });
 
 userSchema.pre("save", async function (next) {
