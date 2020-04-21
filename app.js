@@ -8,7 +8,6 @@ const globalErrorHandler = require("./controllers/errorController");
 
 const app = express();
 
-// 1) MIDDLEWARES
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
@@ -22,7 +21,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3) ROUTES
 app.use("/api/v1/plants", plantRouter);
 app.use("/api/v1/users", userRouter);
 
