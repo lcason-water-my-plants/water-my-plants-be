@@ -70,7 +70,7 @@ const plantSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    owner: Array,
+    owner: String,
   },
   {
     toJSON: { virtuals: true },

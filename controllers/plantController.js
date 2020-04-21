@@ -61,7 +61,7 @@ exports.createPlant = catchAsync(async (req, res, next) => {
   );
   const updatePlant = await Plant.findByIdAndUpdate(
     newPlant._id,
-    { $push: { owner: req.user._id } },
+    { owner: req.user._id },
     { new: true }
   );
   res.status(201).json({
